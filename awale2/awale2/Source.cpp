@@ -97,12 +97,12 @@ int jouerCoup(Position * pos_next, Position * pos_courante, int ordi_joue, int i
   }
   int sum = 0;
   if (pos_next->ordi_joue) {
-    for (int i = SIZE; i >0 ; i--) {
+    for (int i = 0; i <SIZE ; i++) {
       sum += pos_next->cases[i];
     }
   }
   else {
-    for (int i = SIZE*2; i > SIZE; i--) {
+    for (int i = SIZE; i <SIZE*2; i++) {
       sum += pos_next->cases[i];
     }
   }
