@@ -3,7 +3,7 @@
 #include <ctime>
 #include <algorithm>
 
-#define SIZE 12 
+#define SIZE 12
 
 struct Position {
   int cases[SIZE * 2]; // chaque case contient un nombre de
@@ -18,7 +18,7 @@ struct Position {
 int positionFinale(Position * pos_courante, int ordi_joue, int prof) {
   int res = 0;
   if (ordi_joue) {
-    if (pos_courante->pions_pris_ordi > (SIZE * 4)) {
+    if (pos_courante->pions_pris_ordi > (SIZE * 4) || pos_courante->pions_pris_joueur > (SIZE * 4)) {
       return 1;
     }
     for (int i = 0; i < SIZE; i++) {
@@ -27,7 +27,7 @@ int positionFinale(Position * pos_courante, int ordi_joue, int prof) {
     return !res;
   }
   else {
-    if (pos_courante->pions_pris_joueur >(SIZE * 4)) {
+    if (pos_courante->pions_pris_joueur >(SIZE * 4) || pos_courante->pions_pris_ordi > (SIZE * 4)) {
       return 1;
     }
     for (int i = SIZE; i < SIZE * 2; i++) {
@@ -181,8 +181,8 @@ int valeurMinMax(Position* pos_courante, int ordi_joue, int prof, int profMax, i
 	 profMax++;
 	 }*/
 
-      if (profMax < 19) {
-	if (i == 0 && profondeurVariable(pos_courante, ordi_joue) <= 2) {
+      if (profMax < 10) {
+	if (i == 0 && profondeurVariable(pos_courante, ordi_joue) <= 3) {
 	  profMax++;
 	  //std::cout<<"La profondeur Max est : " << profMax << std::endl;
 	}
@@ -230,8 +230,8 @@ int valeurMinMax(Position* pos_courante, int ordi_joue, int prof, int profMax, i
     if (!ordi_joue) {
       int val = INT_MAX;
       for (int i = 0; i<SIZE; i++) {
-	if (profMax < 19) {
-	  if (i == 0 && profondeurVariable(pos_courante, ordi_joue) <= 2) {
+	if (profMax < 10) {
+	  if (i == 0 && profondeurVariable(pos_courante, ordi_joue) <= 3) {
 	    profMax++;
 	    //std::cout<<"La profondeur Max est : " << profMax << std::endl;
 	  }
@@ -265,7 +265,7 @@ int valeurMinMax(Position* pos_courante, int ordi_joue, int prof, int profMax, i
       int val = INT_MIN;
 
       for (int i = 0; i<SIZE; i++) {
-	if (profMax < 19) {
+	if (profMax < 10) {
 	  if (i == 0 && profondeurVariable(pos_courante, ordi_joue) <= 2) {
 	    profMax++;
 	    //std::cout<<"La profondeur Max est : " << profMax << std::endl;
@@ -403,18 +403,30 @@ int main()
   if (pos.ordi_joue) {
     while (!positionFinale(&pos, pos.ordi_joue, 0)) {
       clock_t begin = std::clock();
-      int indice = valeurMinMax(&pos, pos.ordi_joue, 0, 11, INT_MIN, INT_MAX);
+      int indice = valeurMinMax(&pos, pos.ordi_joue, 0, 9, INT_MIN, INT_MAX);
       clock_t end = std::clock();
       std::cout << "Temps: " << double(end - begin) / CLOCKS_PER_SEC << std::endl;
       std::cout << "L'ordi joue ==================>";
-      std::cout << indice << std::endl;
+      int temp2 = indice +1;
+      std::cout << temp2 << std::endl;
       jouerCoup(&pos_next, &pos, pos.ordi_joue, indice);
       afficherPlateau(&pos_next);
       std::cout << "Enter le coup du joueur: ";
-      std::cin >> coupAdversaire;
-      while (!coupValide(&pos_next, pos_next.ordi_joue, coupAdversaire)) {
-	std::cout << "Enter le coup du joueur: ";
+      //std::cin >> coupAdversaire;
+      while(!(std::cin >> coupAdversaire) && !isdigit(coupAdversaire)){
+	std::cout << "Erreur d'imput, Donner un imput valide : ";
+	std::cin.clear();
+	std::cin.ignore();
+      }
+      coupAdversaire=coupAdversaire-(SIZE+1);
+      
+      while (!coupValide(&pos_next, pos_next.ordi_joue, coupAdversaire) || coupAdversaire<0 || coupAdversaire>SIZE-1) {
+	std::cout << "Coup invalide Enter le coup du joueur: ";
+	std::cout << coupAdversaire << std::endl;
+	std::cin.clear();
+	std::cin.ignore();
 	std::cin >> coupAdversaire;
+	coupAdversaire=coupAdversaire-(SIZE+1); 
       }
       jouerCoup(&pos, &pos_next, pos_next.ordi_joue, coupAdversaire);
       afficherPlateau(&pos);
@@ -423,19 +435,31 @@ int main()
   else {
     while (!positionFinale(&pos, pos.ordi_joue, 0)) {
       std::cout << "Enter le coup du joueur: ";
-      std::cin >> coupAdversaire;
-      while (!coupValide(&pos, pos.ordi_joue, coupAdversaire)) {
-	std::cout << "Enter le coup du joueur: ";
-	std::cin >> coupAdversaire;
+      //std::cin >> coupAdversaire;
+      
+      while(!(std::cin >> coupAdversaire) && !isdigit(coupAdversaire)){
+	std::cout << "Erreur d'imput, Donner un imput valide : ";
+	std::cin.clear();
+	std::cin.ignore();
       }
+      coupAdversaire=coupAdversaire-1;
+      while (!coupValide(&pos, pos.ordi_joue, coupAdversaire) || coupAdversaire<0 || coupAdversaire>SIZE-1) {
+	std::cout << "Enter le coup du joueur: ";
+	std::cin.clear();
+	std::cin.ignore();
+	std::cin >> coupAdversaire;
+	coupAdversaire=coupAdversaire-1;
+      }
+      
       jouerCoup(&pos_next, &pos, pos.ordi_joue, coupAdversaire);
       afficherPlateau(&pos_next);
       clock_t begin = std::clock();
-      int indice = valeurMinMax(&pos_next, pos_next.ordi_joue, 0, 11, INT_MIN, INT_MAX);
+      int indice = valeurMinMax(&pos_next, pos_next.ordi_joue, 0, 9, INT_MIN, INT_MAX);
       clock_t end = std::clock();
       std::cout << "Temps: " << double(end - begin) / CLOCKS_PER_SEC << std::endl;
       std::cout << "L'ordi joue ==================>";
-      std::cout << indice << std::endl;
+      int temp = indice+SIZE+1;
+      std::cout << temp << std::endl;
       jouerCoup(&pos, &pos_next, pos_next.ordi_joue, indice);
       afficherPlateau(&pos);
 
